@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>BeyondZ Analytics</title>
+
+  <link
+    rel="stylesheet"
+    href="/style.css"
+  >
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div>
+      <h1>BeyondZ Analytics</h1>
+      <p>
+        Analytics Tracking & Operations Data System
+      </p>
+    </div>
+  </header>
+
+
+  <main class="container">
+
+    <section class="status-grid">
+
+      <div class="status-card">
+        <span class="label">
+          Analytics API
+        </span>
+
+        <strong id="apiStatus">
+          Checking...
+        </strong>
+      </div>
+
+
+      <div class="status-card">
+        <span class="label">
+          Analytics Database
+        </span>
+
+        <strong id="dbStatus">
+          Checking...
+        </strong>
+      </div>
+
+
+      <div class="status-card">
+        <span class="label">
+          Recent Events
+        </span>
+
+        <strong id="eventCount">
+          -
+        </strong>
+      </div>
+
+    </section>
+
+
+    <section class="actions">
+
+      <button
+        id="refreshBtn"
+        type="button"
+      >
+        Refresh Data
+      </button>
+
+      <button
+        id="exportBtn"
+        type="button"
+        class="primary"
+      >
+        Export Events to Excel
+      </button>
+
+    </section>
+
+
+    <section class="panel">
+
+      <div class="panel-header">
+
+        <div>
+          <h2>Recent Analytics Events</h2>
+
+          <p>
+            Latest activity received from
+            BeyondZ Academy.
+          </p>
+        </div>
+
+      </div>
+
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Event</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Tutor</th>
+              <th>Page</th>
+              <th>Entity</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+
+          <tbody id="eventsBody">
+
+            <tr>
+              <td colspan="8">
+                Loading analytics data...
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="/app.js"></script>
+
+</body>
+
+</html>
