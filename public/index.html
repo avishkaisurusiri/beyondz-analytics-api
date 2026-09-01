@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -9,96 +10,522 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>BeyondZ Analytics</title>
+  <title>
+    BeyondZ Analytics
+  </title>
 
   <link
     rel="stylesheet"
     href="/style.css"
   >
+
 </head>
+
 
 <body>
 
+
+  <!--
+  ========================================================
+  TOP BAR
+  ========================================================
+  -->
+
   <header class="topbar">
-    <div>
-      <h1>BeyondZ Analytics</h1>
-      <p>
-        Analytics Tracking & Operations Data System
-      </p>
+
+    <div class="topbar-content">
+
+      <div>
+
+        <h1>
+          BeyondZ Analytics
+        </h1>
+
+        <p>
+          Academy Operations & Learning Analytics
+        </p>
+
+      </div>
+
+
+      <div class="topbar-badge">
+
+        Analytics Control Center
+
+      </div>
+
     </div>
+
   </header>
 
 
+  <!--
+  ========================================================
+  MAIN
+  ========================================================
+  -->
+
   <main class="container">
+
+
+    <!--
+    ======================================================
+    SYSTEM STATUS
+    ======================================================
+    -->
 
     <section class="status-grid">
 
+
       <div class="status-card">
+
         <span class="label">
           Analytics API
         </span>
 
-        <strong id="apiStatus">
+        <strong
+          id="apiStatus"
+          class="status-loading"
+        >
           Checking...
         </strong>
+
+        <span class="card-helper">
+          Tracking service
+        </span>
+
       </div>
 
 
       <div class="status-card">
+
         <span class="label">
           Analytics Database
         </span>
 
-        <strong id="dbStatus">
+        <strong
+          id="dbStatus"
+          class="status-loading"
+        >
           Checking...
         </strong>
+
+        <span class="card-helper">
+          PostgreSQL event warehouse
+        </span>
+
       </div>
 
 
       <div class="status-card">
+
         <span class="label">
-          Recent Events
+          Total Events
         </span>
 
         <strong id="eventCount">
           -
         </strong>
+
+        <span class="card-helper">
+          Matching current filters
+        </span>
+
+      </div>
+
+
+      <div class="status-card">
+
+        <span class="label">
+          Current Dataset
+        </span>
+
+        <strong id="currentCategory">
+          All Events
+        </strong>
+
+        <span class="card-helper">
+          Selected analytics category
+        </span>
+
+      </div>
+
+
+    </section>
+
+
+    <!--
+    ======================================================
+    ANALYTICS CATEGORY
+    ======================================================
+    -->
+
+    <section class="panel controls-panel">
+
+      <div class="panel-header">
+
+        <div>
+
+          <h2>
+            Analytics Dataset
+          </h2>
+
+          <p>
+            Select the operational dataset you want to
+            inspect or export.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel-body">
+
+
+        <div class="control-grid">
+
+
+          <div class="form-group">
+
+            <label for="exportType">
+              Dataset
+            </label>
+
+            <select
+              id="exportType"
+              aria-label="Choose analytics category"
+            >
+
+              <option value="events">
+                All Events
+              </option>
+
+              <option value="student-activity">
+                Student Activity
+              </option>
+
+              <option value="lessons-videos">
+                Lessons & Videos
+              </option>
+
+              <option value="written-exams">
+                Written Exams
+              </option>
+
+              <option value="quizzes">
+                Quiz Performance
+              </option>
+
+              <option value="attendance">
+                Attendance & QR
+              </option>
+
+              <option value="enrollment-payments">
+                Enrollment & Payments
+              </option>
+
+              <option value="ai-usage">
+                AI Usage
+              </option>
+
+              <option value="subject-chat">
+                Subject Chat
+              </option>
+
+              <option value="tutor-operations">
+                Tutor Operations
+              </option>
+
+              <option value="system-errors">
+                System Errors
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="dataset-actions">
+
+            <button
+              id="viewSelectedBtn"
+              type="button"
+            >
+              View Dataset
+            </button>
+
+
+            <button
+              id="exportBtn"
+              type="button"
+              class="primary"
+            >
+              Export Excel
+            </button>
+
+
+            <button
+              id="completeExportBtn"
+              type="button"
+            >
+              Complete Workbook
+            </button>
+
+          </div>
+
+
+        </div>
+
+
       </div>
 
     </section>
 
 
-    <section class="actions">
+    <!--
+    ======================================================
+    FILTERS
+    ======================================================
+    -->
 
-      <button
-        id="refreshBtn"
-        type="button"
-      >
-        Refresh Data
-      </button>
-
-      <button
-        id="exportBtn"
-        type="button"
-        class="primary"
-      >
-        Export Events to Excel
-      </button>
-
-    </section>
-
-
-    <section class="panel">
+    <section class="panel filters-panel">
 
       <div class="panel-header">
 
         <div>
-          <h2>Recent Analytics Events</h2>
+
+          <h2>
+            Filters
+          </h2>
 
           <p>
-            Latest activity received from
+            Narrow the event data for operational analysis.
+          </p>
+
+        </div>
+
+
+        <button
+          id="clearFiltersBtn"
+          type="button"
+          class="small-button"
+        >
+          Clear Filters
+        </button>
+
+      </div>
+
+
+      <div class="panel-body">
+
+
+        <div class="filter-grid">
+
+
+          <div class="form-group">
+
+            <label for="eventNameFilter">
+              Event Name
+            </label>
+
+            <input
+              id="eventNameFilter"
+              type="text"
+              placeholder="e.g. video_completed"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="userIdFilter">
+              User ID
+            </label>
+
+            <input
+              id="userIdFilter"
+              type="text"
+              placeholder="Student / user ID"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="tutorIdFilter">
+              Tutor ID
+            </label>
+
+            <input
+              id="tutorIdFilter"
+              type="text"
+              placeholder="Tutor ID"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="entityTypeFilter">
+              Entity Type
+            </label>
+
+            <input
+              id="entityTypeFilter"
+              type="text"
+              placeholder="e.g. lesson_quiz"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="fromDateFilter">
+              From
+            </label>
+
+            <input
+              id="fromDateFilter"
+              type="date"
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="toDateFilter">
+              To
+            </label>
+
+            <input
+              id="toDateFilter"
+              type="date"
+            >
+
+          </div>
+
+
+        </div>
+
+
+        <div class="filter-actions">
+
+          <button
+            id="applyFiltersBtn"
+            type="button"
+            class="primary"
+          >
+            Apply Filters
+          </button>
+
+
+          <button
+            id="refreshBtn"
+            type="button"
+          >
+            Refresh Data
+          </button>
+
+        </div>
+
+
+      </div>
+
+    </section>
+
+
+    <!--
+    ======================================================
+    DATASET SUMMARY
+    ======================================================
+    -->
+
+    <section class="summary-grid">
+
+
+      <div class="summary-card">
+
+        <span>
+          Showing
+        </span>
+
+        <strong id="showingCount">
+          -
+        </strong>
+
+      </div>
+
+
+      <div class="summary-card">
+
+        <span>
+          Total Matching
+        </span>
+
+        <strong id="totalMatching">
+          -
+        </strong>
+
+      </div>
+
+
+      <div class="summary-card">
+
+        <span>
+          Page
+        </span>
+
+        <strong id="currentPage">
+          1
+        </strong>
+
+      </div>
+
+
+      <div class="summary-card">
+
+        <span>
+          Rows Per Page
+        </span>
+
+        <strong id="pageSizeDisplay">
+          50
+        </strong>
+
+      </div>
+
+
+    </section>
+
+
+    <!--
+    ======================================================
+    EVENTS TABLE
+    ======================================================
+    -->
+
+    <section class="panel events-panel">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h2 id="eventsPanelTitle">
+            All Events
+          </h2>
+
+          <p id="eventsPanelDescription">
+            Latest analytics activity received from
             BeyondZ Academy.
           </p>
+
         </div>
 
       </div>
@@ -106,41 +533,251 @@
 
       <div class="table-wrapper">
 
+
         <table>
 
+
           <thead>
+
             <tr>
-              <th>ID</th>
-              <th>Event</th>
-              <th>User</th>
-              <th>Role</th>
-              <th>Tutor</th>
-              <th>Page</th>
-              <th>Entity</th>
-              <th>Time</th>
+
+              <th>
+                ID
+              </th>
+
+              <th>
+                Event
+              </th>
+
+              <th>
+                User
+              </th>
+
+              <th>
+                Role
+              </th>
+
+              <th>
+                Tutor
+              </th>
+
+              <th>
+                Page
+              </th>
+
+              <th>
+                Entity
+              </th>
+
+              <th>
+                Time
+              </th>
+
+              <th>
+                Details
+              </th>
+
             </tr>
+
           </thead>
+
 
           <tbody id="eventsBody">
 
             <tr>
-              <td colspan="8">
+
+              <td
+                colspan="9"
+                class="empty-state"
+              >
                 Loading analytics data...
               </td>
+
             </tr>
 
           </tbody>
 
+
         </table>
+
 
       </div>
 
+
+      <!--
+      ====================================================
+      PAGINATION
+      ====================================================
+      -->
+
+      <div class="pagination">
+
+
+        <button
+          id="previousPageBtn"
+          type="button"
+          disabled
+        >
+          Previous
+        </button>
+
+
+        <span id="paginationInfo">
+          Page 1
+        </span>
+
+
+        <button
+          id="nextPageBtn"
+          type="button"
+          disabled
+        >
+          Next
+        </button>
+
+
+      </div>
+
+
     </section>
+
 
   </main>
 
 
+  <!--
+  ========================================================
+  EVENT DETAILS MODAL
+  ========================================================
+  -->
+
+  <div
+    id="eventDetailsModal"
+    class="modal"
+    aria-hidden="true"
+  >
+
+    <div class="modal-backdrop"></div>
+
+
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eventDetailsTitle"
+    >
+
+
+      <div class="modal-header">
+
+        <div>
+
+          <h2 id="eventDetailsTitle">
+            Event Details
+          </h2>
+
+          <p>
+            Raw analytics metadata for this event.
+          </p>
+
+        </div>
+
+
+        <button
+          id="closeEventDetailsBtn"
+          type="button"
+          class="modal-close"
+          aria-label="Close event details"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="event-detail-grid">
+
+
+        <div>
+
+          <span>
+            Event
+          </span>
+
+          <strong id="detailEventName">
+            -
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            User
+          </span>
+
+          <strong id="detailUser">
+            -
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Entity
+          </span>
+
+          <strong id="detailEntity">
+            -
+          </strong>
+
+        </div>
+
+
+        <div>
+
+          <span>
+            Time
+          </span>
+
+          <strong id="detailTime">
+            -
+          </strong>
+
+        </div>
+
+
+      </div>
+
+
+      <div class="metadata-section">
+
+        <h3>
+          Metadata
+        </h3>
+
+
+        <pre id="detailMetadata">{}</pre>
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+
+  <!--
+  ========================================================
+  JAVASCRIPT
+  ========================================================
+  -->
+
   <script src="/app.js"></script>
+
 
 </body>
 
