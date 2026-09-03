@@ -253,25 +253,17 @@ const EVENT_CATEGORIES = {
   },
 
 
-  system_errors: {
+  "system-errors": {
+  eventTerms: [
+    "error",
+    "exception"
+  ],
 
-    eventTerms: [
-
-      "_failed",
-      "error",
-      "failure",
-      "exception"
-
-    ],
-
-    entityTypes: [
-
-      "error",
-      "system_error"
-
-    ]
-
-  }
+  entityTypes: [
+    "error",
+    "system_error"
+  ]
+}
 
 };
 
@@ -496,8 +488,8 @@ function firstValue(
  */
 
 async function loadEvents(
-  category =
-    null
+  category = null,
+  filters = {}
 ) {
 
   const definition =
@@ -508,65 +500,6 @@ async function loadEvents(
       : null;
 
 
-  /*
-   * ---------------------------------------------------------
-   * ALL EVENTS
-   * ---------------------------------------------------------
-   */
-
-  if (
-    !definition
-  ) {
-
-    const result =
-      await pool.query(
-        `
-
-        SELECT
-
-          event_id,
-
-          event_name,
-
-          user_id,
-
-          user_role,
-
-          tutor_id,
-
-          session_id,
-
-          page,
-
-          entity_type,
-
-          entity_id,
-
-          metadata,
-
-          created_at
-
-        FROM analytics_events
-
-        ORDER BY
-          created_at DESC,
-          event_id DESC
-
-        `
-      );
-
-
-    return result.rows;
-
-  }
-
-
-  /*
-   * ---------------------------------------------------------
-   * CATEGORY
-   * ---------------------------------------------------------
-   */
-
   const conditions =
     [];
 
@@ -575,14 +508,124 @@ async function loadEvents(
     [];
 
 
-  for (
-    const term
-    of definition.eventTerms ||
+  /*
+   * =======================================================
+   * CATEGORY
+   * =======================================================
+   */
+
+  if (
+    definition
+  ) {
+
+    const categoryConditions =
+      [];
+
+
+    for (
+      const term
+      of definition.eventTerms ||
       []
+    ) {
+
+      values.push(
+        `%${term}%`
+      );
+
+
+      categoryConditions.push(
+        `
+          LOWER(event_name)
+          LIKE LOWER($${values.length})
+        `
+      );
+
+    }
+
+
+    for (
+      const entityType
+      of definition.entityTypes ||
+      []
+    ) {
+
+      values.push(
+        entityType
+      );
+
+
+      categoryConditions.push(
+        `
+          LOWER(
+            COALESCE(
+              entity_type,
+              ''
+            )
+          )
+          =
+          LOWER(
+            $${values.length}
+          )
+        `
+      );
+
+    }
+
+
+    if (
+      categoryConditions.length >
+      0
+    ) {
+
+      conditions.push(
+        `
+          (
+            ${categoryConditions.join(
+              " OR "
+            )}
+          )
+        `
+      );
+
+    }
+
+  }
+
+
+  /*
+   * =======================================================
+   * SYNTHETIC DATA
+   * =======================================================
+   */
+
+  if (
+    filters.synthetic ===
+    true
+  ) {
+
+    conditions.push(
+      `
+        metadata->>'synthetic'
+        =
+        'true'
+      `
+    );
+
+  }
+
+
+  /*
+   * =======================================================
+   * EVENT NAME
+   * =======================================================
+   */
+
+  if (
+    filters.event_name
   ) {
 
     values.push(
-      `%${term}%`
+      `%${filters.event_name}%`
     );
 
 
@@ -596,14 +639,82 @@ async function loadEvents(
   }
 
 
-  for (
-    const entityType
-    of definition.entityTypes ||
-      []
+  /*
+   * =======================================================
+   * USER ID
+   * =======================================================
+   */
+
+  if (
+    filters.user_id
   ) {
 
     values.push(
-      entityType
+      `%${filters.user_id}%`
+    );
+
+
+    conditions.push(
+      `
+        LOWER(
+          COALESCE(
+            user_id,
+            ''
+          )
+        )
+        LIKE LOWER(
+          $${values.length}
+        )
+      `
+    );
+
+  }
+
+
+  /*
+   * =======================================================
+   * TUTOR ID
+   * =======================================================
+   */
+
+  if (
+    filters.tutor_id
+  ) {
+
+    values.push(
+      `%${filters.tutor_id}%`
+    );
+
+
+    conditions.push(
+      `
+        LOWER(
+          COALESCE(
+            tutor_id,
+            ''
+          )
+        )
+        LIKE LOWER(
+          $${values.length}
+        )
+      `
+    );
+
+  }
+
+
+  /*
+   * =======================================================
+   * ENTITY TYPE
+   * =======================================================
+   */
+
+  if (
+    filters.entity_type
+  ) {
+
+    values.push(
+      `%${filters.entity_type}%`
     );
 
 
@@ -615,8 +726,7 @@ async function loadEvents(
             ''
           )
         )
-        =
-        LOWER(
+        LIKE LOWER(
           $${values.length}
         )
       `
@@ -625,57 +735,102 @@ async function loadEvents(
   }
 
 
+  /*
+   * =======================================================
+   * FROM DATE
+   * =======================================================
+   */
+
   if (
-    conditions.length ===
-    0
+    filters.from
   ) {
 
-    return [];
+    values.push(
+      filters.from
+    );
+
+
+    conditions.push(
+      `
+        created_at
+        >=
+        $${values.length}::timestamptz
+      `
+    );
 
   }
 
 
+  /*
+   * =======================================================
+   * TO DATE
+   * =======================================================
+   */
+
+  if (
+    filters.to
+  ) {
+
+    values.push(
+      filters.to
+    );
+
+
+    conditions.push(
+      `
+        created_at
+        <
+        $${values.length}::timestamptz
+      `
+    );
+
+  }
+
+
+  const whereClause =
+    conditions.length
+      ? `
+          WHERE
+          ${conditions.join(
+            "\nAND\n"
+          )}
+        `
+      : "";
+
+
   const query =
     `
+      SELECT
 
-    SELECT
+        event_id,
 
-      event_id,
+        event_name,
 
-      event_name,
+        user_id,
 
-      user_id,
+        user_role,
 
-      user_role,
+        tutor_id,
 
-      tutor_id,
+        session_id,
 
-      session_id,
+        page,
 
-      page,
+        entity_type,
 
-      entity_type,
+        entity_id,
 
-      entity_id,
+        metadata,
 
-      metadata,
+        created_at
 
-      created_at
+      FROM analytics_events
 
-    FROM analytics_events
+      ${whereClause}
 
-    WHERE
-
-      (
-        ${conditions.join(
-          " OR "
-        )}
-      )
-
-    ORDER BY
-      created_at DESC,
-      event_id DESC
-
+      ORDER BY
+        created_at DESC,
+        event_id DESC
     `;
 
 
@@ -3096,6 +3251,304 @@ function createSystemErrorsSheet(
 
 /*
  * =========================================================
+ * EXPORT REQUEST FILTERS
+ * =========================================================
+ */
+
+function getExportFilters(
+  req
+) {
+
+  return {
+
+    synthetic:
+      String(
+        req.query.synthetic ||
+        ""
+      )
+        .trim()
+        .toLowerCase() ===
+      "true",
+
+    event_name:
+      cleanValue(
+        req.query.event_name
+      ),
+
+    user_id:
+      cleanValue(
+        req.query.user_id
+      ),
+
+    tutor_id:
+      cleanValue(
+        req.query.tutor_id
+      ),
+
+    entity_type:
+      cleanValue(
+        req.query.entity_type
+      ),
+
+    from:
+      cleanValue(
+        req.query.from
+      ),
+
+    to:
+      cleanValue(
+        req.query.to
+      ),
+
+    filename_from:
+      cleanValue(
+        req.query.filename_from
+      ),
+
+    filename_to:
+      cleanValue(
+        req.query.filename_to
+      )
+
+  };
+
+}
+
+
+/*
+ * =========================================================
+ * SAFE FILENAME VALUE
+ * =========================================================
+ */
+
+function safeFilenamePart(
+  value
+) {
+
+  if (
+    value === undefined ||
+    value === null
+  ) {
+
+    return "";
+
+  }
+
+
+  return String(
+    value
+  )
+    .trim()
+    .replace(
+      /[<>:"/\\|?*]+/g,
+      "-"
+    )
+    .replace(
+      /\s+/g,
+      "-"
+    )
+    .replace(
+      /-+/g,
+      "-"
+    )
+    .replace(
+      /^[-_.]+|[-_.]+$/g,
+      ""
+    )
+    .substring(
+      0,
+      60
+    );
+
+}
+
+
+/*
+ * =========================================================
+ * EXPORT DATE
+ * =========================================================
+ */
+
+function getExportDate() {
+
+  const now =
+    new Date();
+
+
+  const formatter =
+    new Intl.DateTimeFormat(
+      "en-CA",
+      {
+        timeZone:
+          "Asia/Colombo",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit"
+      }
+    );
+
+
+  const parts =
+    formatter.formatToParts(
+      now
+    );
+
+
+  const values =
+    {};
+
+
+  for (
+    const part
+    of parts
+  ) {
+
+    if (
+      part.type !==
+      "literal"
+    ) {
+
+      values[
+        part.type
+      ] =
+        part.value;
+
+    }
+
+  }
+
+
+  return (
+    `${values.year}-` +
+    `${values.month}-` +
+    `${values.day}`
+  );
+
+}
+
+
+/*
+ * =========================================================
+ * AUTOMATIC EXPORT FILENAME
+ * =========================================================
+ */
+
+function buildExportFilename({
+
+  categoryLabel,
+
+  filters
+
+}) {
+
+  const parts =
+    [
+      "BeyondZ",
+
+      filters.synthetic
+        ? "Synthetic"
+        : "Real",
+
+      categoryLabel
+    ];
+
+
+  if (
+    filters.event_name
+  ) {
+
+    parts.push(
+      `Event-${filters.event_name}`
+    );
+
+  }
+
+
+  if (
+    filters.user_id
+  ) {
+
+    parts.push(
+      `User-${filters.user_id}`
+    );
+
+  }
+
+
+  if (
+    filters.tutor_id
+  ) {
+
+    parts.push(
+      `Tutor-${filters.tutor_id}`
+    );
+
+  }
+
+
+  if (
+    filters.entity_type
+  ) {
+
+    parts.push(
+      `Entity-${filters.entity_type}`
+    );
+
+  }
+
+
+  if (
+    filters.filename_from
+  ) {
+
+    parts.push(
+      `From-${filters.filename_from}`
+    );
+
+  }
+
+
+  if (
+    filters.filename_to
+  ) {
+
+    parts.push(
+      `To-${filters.filename_to}`
+    );
+
+  }
+
+
+  parts.push(
+    getExportDate()
+  );
+
+
+  return (
+    parts
+      .map(
+        safeFilenamePart
+      )
+      .filter(
+        Boolean
+      )
+      .join(
+        "_"
+      ) +
+    ".xlsx"
+  );
+
+}
+
+
+/*
+ * =========================================================
  * SEND EXCEL
  * =========================================================
  */
@@ -3153,8 +3606,17 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
-        await loadEvents();
+        await loadEvents(
+          null,
+          filters
+        );
 
 
       const workbook =
@@ -3169,9 +3631,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-analytics-all-events.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "All Events",
+
+          filters
+
+        })
+
       );
 
 
@@ -3218,9 +3691,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "student_activity"
+          "student_activity",
+          filters
         );
 
 
@@ -3235,9 +3715,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-student-activity.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Student Activity",
+
+          filters
+
+        })
+
       );
 
 
@@ -3284,9 +3775,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "lessons_videos"
+          "lessons_videos",
+          filters
         );
 
 
@@ -3301,9 +3799,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-lessons-videos.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Lessons Videos",
+
+          filters
+
+        })
+
       );
 
 
@@ -3350,9 +3859,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "written_exams"
+          "written_exams",
+          filters
         );
 
 
@@ -3367,9 +3883,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-written-exams.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Written Exams",
+
+          filters
+
+        })
+
       );
 
 
@@ -3416,9 +3943,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "quizzes"
+          "quizzes",
+          filters
         );
 
 
@@ -3433,9 +3967,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-quizzes.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Quiz Performance",
+
+          filters
+
+        })
+
       );
 
 
@@ -3482,9 +4027,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "attendance"
+          "attendance",
+          filters
         );
 
 
@@ -3499,9 +4051,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-attendance.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Attendance QR",
+
+          filters
+
+        })
+
       );
 
 
@@ -3548,9 +4111,16 @@ router.get(
 
     try {
 
+      const filters =
+        getExportFilters(
+          req
+        );
+
+
       const rows =
         await loadEvents(
-          "enrollment_payments"
+          "enrollment_payments",
+          filters
         );
 
 
@@ -3565,9 +4135,20 @@ router.get(
 
 
       await sendWorkbook(
+
         res,
+
         workbook,
-        "beyondz-enrollment-payments.xlsx"
+
+        buildExportFilename({
+
+          categoryLabel:
+            "Enrollment Payments",
+
+          filters
+
+        })
+
       );
 
 
@@ -3597,7 +4178,6 @@ router.get(
 
   }
 );
-
 
 /*
  * =========================================================

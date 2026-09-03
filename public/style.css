@@ -415,6 +415,21 @@ button.primary:hover:not(:disabled) {
   border-color: #1d4ed8;
 }
 
+button.synthetic-button {
+  background: #0f766e;
+
+  color: white;
+
+  border-color: #0f766e;
+}
+
+
+button.synthetic-button:hover:not(:disabled) {
+  background: #115e59;
+
+  border-color: #115e59;
+}
+
 button:disabled {
   cursor: not-allowed;
 

@@ -310,27 +310,16 @@ const EVENT_CATEGORIES = {
    */
 
   "system-errors": {
+  eventTerms: [
+    "error",
+    "exception"
+  ],
 
-    eventTerms: [
-
-      "_failed",
-
-      "error",
-
-      "failure",
-
-      "exception"
-
-    ],
-
-    entityTypes: [
-
-      "error",
-      "system_error"
-
-    ]
-
-  }
+  entityTypes: [
+    "error",
+    "system_error"
+  ]
+}
 
 };
 
@@ -1097,6 +1086,16 @@ router.get(
         );
 
 
+      const syntheticOnly =
+        String(
+          req.query.synthetic ||
+          ""
+        )
+          .trim()
+          .toLowerCase() ===
+        "true";
+
+
       const fromDate =
         normalizeDate(
           req.query.from
@@ -1361,6 +1360,27 @@ router.get(
 
       /*
        * -----------------------------------------------------
+       * SYNTHETIC DATA ONLY
+       * -----------------------------------------------------
+       */
+
+      if (
+        syntheticOnly
+      ) {
+
+        conditions.push(
+          `
+            metadata->>'synthetic'
+            =
+            'true'
+          `
+        );
+
+      }
+
+
+      /*
+       * -----------------------------------------------------
        * FROM DATE
        * -----------------------------------------------------
        */
@@ -1611,6 +1631,9 @@ router.get(
         category:
           category ||
           "events",
+
+        synthetic_only:
+          syntheticOnly,
 
         count:
           result.rows.length,

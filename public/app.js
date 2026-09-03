@@ -76,6 +76,13 @@ const viewSelectedBtn =
     "viewSelectedBtn"
   );
 
+
+const viewSyntheticBtn =
+  document.getElementById(
+    "viewSyntheticBtn"
+  );
+
+
 const exportBtn =
   document.getElementById(
     "exportBtn"
@@ -300,6 +307,9 @@ const analyticsState = {
   category:
     "events",
 
+  syntheticOnly:
+    false,
+
   offset:
     0,
 
@@ -494,6 +504,18 @@ function buildEventsUrl() {
     params.set(
       "category",
       analyticsState.category
+    );
+
+  }
+
+
+  if (
+    analyticsState.syntheticOnly
+  ) {
+
+    params.set(
+      "synthetic",
+      "true"
     );
 
   }
@@ -1159,6 +1181,12 @@ function updateDatasetDisplay() {
     "Analytics Events";
 
 
+  const displayLabel =
+    analyticsState.syntheticOnly
+      ? `Synthetic · ${label}`
+      : label;
+
+
   const showing =
     analyticsState.events.length;
 
@@ -1177,7 +1205,7 @@ function updateDatasetDisplay() {
 
 
   currentCategory.textContent =
-    label;
+    displayLabel;
 
 
   showingCount.textContent =
@@ -1205,7 +1233,9 @@ function updateDatasetDisplay() {
 
 
   eventsPanelTitle.textContent =
-    label;
+    analyticsState.syntheticOnly
+      ? `Generated Synthetic Data · ${label}`
+      : label;
 
 
   eventsPanelDescription.textContent =
@@ -1230,6 +1260,12 @@ function buildDatasetDescription(
     getFilters();
 
 
+  const sourceText =
+    analyticsState.syntheticOnly
+      ? "Generated synthetic analytics data"
+      : "Analytics data";
+
+
   const activeFilters =
     Object.values(
       filters
@@ -1243,12 +1279,24 @@ function buildDatasetDescription(
   ) {
 
     return (
-      `${label} filtered using ` +
+      `${sourceText} for ${label.toLowerCase()} filtered using ` +
       `${activeFilters} active filter${
         activeFilters === 1
           ? ""
           : "s"
       }.`
+    );
+
+  }
+
+
+  if (
+    analyticsState.syntheticOnly
+  ) {
+
+    return (
+      `Generated synthetic ${label.toLowerCase()} ` +
+      `from the BeyondZ behavioural simulation dataset.`
     );
 
   }
@@ -1260,7 +1308,6 @@ function buildDatasetDescription(
   );
 
 }
-
 
 /*
 ========================================================
@@ -1477,6 +1524,15 @@ EXPORT SELECTED DATASET
 
 function exportSelectedCategory() {
 
+  if (
+    !validateFilters()
+  ) {
+
+    return;
+
+  }
+
+
   const selected =
     exportType.value;
 
@@ -1501,11 +1557,137 @@ function exportSelectedCategory() {
   }
 
 
+  const params =
+    new URLSearchParams();
+
+
+  /*
+   * -------------------------------------------------------
+   * DATASET MODE
+   * -------------------------------------------------------
+   */
+
+  params.set(
+    "dataset",
+    analyticsState.syntheticOnly
+      ? "synthetic"
+      : "real"
+  );
+
+
+  if (
+    analyticsState.syntheticOnly
+  ) {
+
+    params.set(
+      "synthetic",
+      "true"
+    );
+
+  }
+
+
+  /*
+   * -------------------------------------------------------
+   * ACTIVE FILTERS
+   * -------------------------------------------------------
+   */
+
+  const filters =
+    getFilters();
+
+
+  appendQueryValue(
+    params,
+    "event_name",
+    filters.event_name
+  );
+
+
+  appendQueryValue(
+    params,
+    "user_id",
+    filters.user_id
+  );
+
+
+  appendQueryValue(
+    params,
+    "tutor_id",
+    filters.tutor_id
+  );
+
+
+  appendQueryValue(
+    params,
+    "entity_type",
+    filters.entity_type
+  );
+
+
+  /*
+   * Keep the original selected dates in
+   * the query for filename generation.
+   */
+
+  if (
+    filters.from
+  ) {
+
+    params.set(
+      "from",
+      `${filters.from}T00:00:00`
+    );
+
+
+    params.set(
+      "filename_from",
+      filters.from
+    );
+
+  }
+
+
+  if (
+    filters.to
+  ) {
+
+    const nextDay =
+      getNextDateString(
+        filters.to
+      );
+
+
+    if (
+      nextDay
+    ) {
+
+      params.set(
+        "to",
+        `${nextDay}T00:00:00`
+      );
+
+    }
+
+
+    params.set(
+      "filename_to",
+      filters.to
+    );
+
+  }
+
+
+  const query =
+    params.toString();
+
+
   window.location.href =
-    route;
+    query
+      ? `${route}?${query}`
+      : route;
 
 }
-
 
 /*
 ========================================================
@@ -1784,13 +1966,37 @@ eventsBody.addEventListener(
 DATASET SELECTION
 ========================================================
 */
-
 viewSelectedBtn.addEventListener(
   "click",
   async () => {
 
     analyticsState.category =
       exportType.value;
+
+
+    analyticsState.syntheticOnly =
+      false;
+
+
+    analyticsState.offset =
+      0;
+
+
+    await loadEvents();
+
+  }
+);
+
+viewSyntheticBtn.addEventListener(
+  "click",
+  async () => {
+
+    analyticsState.category =
+      exportType.value;
+
+
+    analyticsState.syntheticOnly =
+      true;
 
 
     analyticsState.offset =
