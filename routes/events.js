@@ -1086,14 +1086,45 @@ router.get(
         );
 
 
-      const syntheticOnly =
-        String(
-          req.query.synthetic ||
-          ""
-        )
-          .trim()
-          .toLowerCase() ===
-        "true";
+      /*
+ * -----------------------------------------------------
+ * DATASET MODE
+ * -----------------------------------------------------
+ *
+ * Supported values:
+ *
+ * all
+ * real
+ * synthetic
+ *
+ * all       = no dataset restriction
+ * real      = anything not explicitly synthetic
+ * synthetic = metadata.synthetic === true
+ */
+
+let datasetMode =
+  String(
+    req.query.dataset ||
+    "all"
+  )
+    .trim()
+    .toLowerCase();
+
+
+if (
+  ![
+    "all",
+    "real",
+    "synthetic"
+  ].includes(
+    datasetMode
+  )
+) {
+
+  datasetMode =
+    "all";
+
+}
 
 
       const fromDate =
@@ -1357,26 +1388,84 @@ router.get(
 
       }
 
+/*
+ * -----------------------------------------------------
+ * DATASET FILTER
+ * -----------------------------------------------------
+ */
 
-      /*
-       * -----------------------------------------------------
-       * SYNTHETIC DATA ONLY
-       * -----------------------------------------------------
-       */
 
-      if (
-        syntheticOnly
-      ) {
+/*
+ * SYNTHETIC DATA
+ *
+ * Only events explicitly marked:
+ *
+ * metadata.synthetic = true
+ */
 
-        conditions.push(
-          `
-            metadata->>'synthetic'
-            =
-            'true'
-          `
-        );
+if (
+  datasetMode ===
+  "synthetic"
+) {
 
-      }
+  conditions.push(
+    `
+      LOWER(
+        COALESCE(
+          metadata->>'synthetic',
+          'false'
+        )
+      )
+      =
+      'true'
+    `
+  );
+
+}
+
+
+/*
+ * REAL DATA
+ *
+ * Anything that is NOT explicitly synthetic.
+ *
+ * This includes:
+ *
+ * metadata.synthetic = false
+ *
+ * and normal production events where the
+ * synthetic property does not exist.
+ */
+
+if (
+  datasetMode ===
+  "real"
+) {
+
+  conditions.push(
+    `
+      LOWER(
+        COALESCE(
+          metadata->>'synthetic',
+          'false'
+        )
+      )
+      <>
+      'true'
+    `
+  );
+
+}
+
+
+/*
+ * ALL DATA
+ *
+ * No condition is added.
+ *
+ * Therefore both real and synthetic events
+ * are returned.
+ */
 
 
       /*
@@ -1632,8 +1721,8 @@ router.get(
           category ||
           "events",
 
-        synthetic_only:
-          syntheticOnly,
+        dataset:
+  datasetMode,
 
         count:
           result.rows.length,

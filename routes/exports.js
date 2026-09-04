@@ -592,27 +592,83 @@ async function loadEvents(
   }
 
 
-  /*
-   * =======================================================
-   * SYNTHETIC DATA
-   * =======================================================
-   */
+ /*
+ * =======================================================
+ * DATASET MODE
+ * =======================================================
+ *
+ * synthetic
+ *   Only explicitly generated synthetic events.
+ *
+ * real
+ *   Events that are NOT explicitly synthetic.
+ *
+ * all
+ *   No dataset restriction.
+ */
 
-  if (
-    filters.synthetic ===
-    true
-  ) {
 
-    conditions.push(
-      `
-        metadata->>'synthetic'
-        =
-        'true'
-      `
-    );
+/*
+ * -------------------------------------------------------
+ * SYNTHETIC DATA
+ * -------------------------------------------------------
+ */
 
-  }
+if (
+  filters.dataset ===
+  "synthetic"
+) {
 
+  conditions.push(
+    `
+      LOWER(
+        COALESCE(
+          metadata->>'synthetic',
+          'false'
+        )
+      )
+      =
+      'true'
+    `
+  );
+
+}
+
+
+/*
+ * -------------------------------------------------------
+ * REAL DATA
+ * -------------------------------------------------------
+ */
+
+if (
+  filters.dataset ===
+  "real"
+) {
+
+  conditions.push(
+    `
+      LOWER(
+        COALESCE(
+          metadata->>'synthetic',
+          'false'
+        )
+      )
+      <>
+      'true'
+    `
+  );
+
+}
+
+
+/*
+ * -------------------------------------------------------
+ * ALL DATA
+ * -------------------------------------------------------
+ *
+ * No SQL condition required.
+ */
 
   /*
    * =======================================================
@@ -3259,16 +3315,46 @@ function getExportFilters(
   req
 ) {
 
+  /*
+   * -----------------------------------------------------
+   * DATASET MODE
+   * -----------------------------------------------------
+   */
+
+  let dataset =
+    String(
+      req.query.dataset ||
+      "all"
+    )
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    ![
+      "all",
+      "real",
+      "synthetic"
+    ].includes(
+      dataset
+    )
+  ) {
+
+    dataset =
+      "all";
+
+  }
+
+
+  /*
+   * -----------------------------------------------------
+   * EXPORT FILTERS
+   * -----------------------------------------------------
+   */
+
   return {
 
-    synthetic:
-      String(
-        req.query.synthetic ||
-        ""
-      )
-        .trim()
-        .toLowerCase() ===
-      "true",
+    dataset,
 
     event_name:
       cleanValue(
@@ -3313,7 +3399,6 @@ function getExportFilters(
   };
 
 }
-
 
 /*
  * =========================================================
@@ -3447,16 +3532,38 @@ function buildExportFilename({
 
 }) {
 
-  const parts =
-    [
-      "BeyondZ",
+  let datasetLabel =
+  "All-Data";
 
-      filters.synthetic
-        ? "Synthetic"
-        : "Real",
 
-      categoryLabel
-    ];
+if (
+  filters.dataset ===
+  "real"
+) {
+
+  datasetLabel =
+    "Real-Data";
+
+}
+
+
+if (
+  filters.dataset ===
+  "synthetic"
+) {
+
+  datasetLabel =
+    "Synthetic-Data";
+
+}
+
+
+const parts =
+  [
+    "BeyondZ",
+    datasetLabel,
+    categoryLabel
+  ];
 
 
   if (

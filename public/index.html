@@ -160,137 +160,170 @@
     ======================================================
     -->
 
-    <section class="panel controls-panel">
+   <section class="panel controls-panel">
 
-      <div class="panel-header">
+  <div class="panel-header">
 
-        <div>
+    <div>
 
-          <h2>
-            Analytics Dataset
-          </h2>
+      <h2>
+        Analytics Dataset
+      </h2>
 
-          <p>
-            Select the operational dataset you want to
-            inspect or export.
-          </p>
+      <p>
+        Select the data source and operational category
+        you want to inspect or export.
+      </p>
 
-        </div>
+    </div>
 
-      </div>
-
-
-      <div class="panel-body">
+  </div>
 
 
-        <div class="control-grid">
+  <div class="panel-body">
+
+    <div class="dataset-selector-grid">
 
 
-          <div class="form-group">
+      <!--
+      ========================================================
+      DATASET TYPE
+      ========================================================
+      -->
 
-            <label for="exportType">
-              Dataset
-            </label>
+      <div class="form-group">
 
-            <select
-              id="exportType"
-              aria-label="Choose analytics category"
-            >
+        <label for="datasetMode">
+          Dataset Type
+        </label>
 
-              <option value="events">
-                All Events
-              </option>
+        <select
+          id="datasetMode"
+          aria-label="Choose dataset type"
+        >
 
-              <option value="student-activity">
-                Student Activity
-              </option>
+          <option value="all" selected>
+            All Data
+          </option>
 
-              <option value="lessons-videos">
-                Lessons & Videos
-              </option>
+          <option value="real">
+            Real Data
+          </option>
 
-              <option value="written-exams">
-                Written Exams
-              </option>
+          <option value="synthetic">
+            Synthetic Data
+          </option>
 
-              <option value="quizzes">
-                Quiz Performance
-              </option>
-
-              <option value="attendance">
-                Attendance & QR
-              </option>
-
-              <option value="enrollment-payments">
-                Enrollment & Payments
-              </option>
-
-              <option value="ai-usage">
-                AI Usage
-              </option>
-
-              <option value="subject-chat">
-                Subject Chat
-              </option>
-
-              <option value="tutor-operations">
-                Tutor Operations
-              </option>
-
-              <option value="system-errors">
-                System Errors
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="dataset-actions">
-
-           <button
-  id="viewSelectedBtn"
-  type="button"
->
-  View Dataset
-</button>
-
-
-<button
-  id="viewSyntheticBtn"
-  type="button"
-  class="synthetic-button"
->
-  View Synthetic Data
-</button>
-
-
-            <button
-              id="exportBtn"
-              type="button"
-              class="primary"
-            >
-              Export Excel
-            </button>
-
-
-            <button
-              id="completeExportBtn"
-              type="button"
-            >
-              Complete Workbook
-            </button>
-
-          </div>
-
-
-        </div>
-
+        </select>
 
       </div>
 
-    </section>
 
+      <!--
+      ========================================================
+      ANALYTICS CATEGORY
+      ========================================================
+      -->
+
+      <div class="form-group">
+
+        <label for="exportType">
+          Analytics Category
+        </label>
+
+        <select
+          id="exportType"
+          aria-label="Choose analytics category"
+        >
+
+          <option value="events">
+            All Events
+          </option>
+
+          <option value="student-activity">
+            Student Activity
+          </option>
+
+          <option value="lessons-videos">
+            Lessons & Videos
+          </option>
+
+          <option value="written-exams">
+            Written Exams
+          </option>
+
+          <option value="quizzes">
+            Quiz Performance
+          </option>
+
+          <option value="attendance">
+            Attendance & QR
+          </option>
+
+          <option value="enrollment-payments">
+            Enrollment & Payments
+          </option>
+
+          <option value="ai-usage">
+            AI Usage
+          </option>
+
+          <option value="subject-chat">
+            Subject Chat
+          </option>
+
+          <option value="tutor-operations">
+            Tutor Operations
+          </option>
+
+          <option value="system-errors">
+            System Errors
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <!--
+    ========================================================
+    ACTIONS
+    ========================================================
+    -->
+
+    <div class="dataset-actions">
+
+      <button
+        id="viewSelectedBtn"
+        type="button"
+      >
+        View Dataset
+      </button>
+
+
+      <button
+        id="exportBtn"
+        type="button"
+        class="primary"
+      >
+        Export Excel
+      </button>
+
+
+      <button
+        id="completeExportBtn"
+        type="button"
+      >
+        Complete Workbook
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
 
     <!--
     ======================================================

@@ -66,20 +66,21 @@ DATASET CONTROLS
 ========================================================
 */
 
+const datasetMode =
+  document.getElementById(
+    "datasetMode"
+  );
+
+
 const exportType =
   document.getElementById(
     "exportType"
   );
 
+
 const viewSelectedBtn =
   document.getElementById(
     "viewSelectedBtn"
-  );
-
-
-const viewSyntheticBtn =
-  document.getElementById(
-    "viewSyntheticBtn"
   );
 
 
@@ -307,8 +308,8 @@ const analyticsState = {
   category:
     "events",
 
-  syntheticOnly:
-    false,
+  datasetMode:
+    "all",
 
   offset:
     0,
@@ -509,16 +510,18 @@ function buildEventsUrl() {
   }
 
 
-  if (
-    analyticsState.syntheticOnly
-  ) {
+ /*
+ * Dataset mode:
+ *
+ * all
+ * real
+ * synthetic
+ */
 
-    params.set(
-      "synthetic",
-      "true"
-    );
-
-  }
+params.set(
+  "dataset",
+  analyticsState.datasetMode
+); 
 
 
   const filters =
@@ -873,10 +876,21 @@ async function loadEvents({
 
   } finally {
 
-    analyticsState.loading =
-      false;
+  analyticsState.loading =
+    false;
 
-  }
+
+  /*
+   * Refresh pagination after loading finishes.
+   *
+   * updatePagination() disables the buttons while
+   * analyticsState.loading is true, so it must run
+   * again after loading becomes false.
+   */
+
+  updatePagination();
+
+}
 
 }
 
@@ -1181,10 +1195,34 @@ function updateDatasetDisplay() {
     "Analytics Events";
 
 
+  let datasetLabel =
+    "All Data";
+
+
+  if (
+    analyticsState.datasetMode ===
+    "real"
+  ) {
+
+    datasetLabel =
+      "Real Data";
+
+  }
+
+
+  if (
+    analyticsState.datasetMode ===
+    "synthetic"
+  ) {
+
+    datasetLabel =
+      "Synthetic Data";
+
+  }
+
+
   const displayLabel =
-    analyticsState.syntheticOnly
-      ? `Synthetic · ${label}`
-      : label;
+    `${datasetLabel} · ${label}`;
 
 
   const showing =
@@ -1233,9 +1271,7 @@ function updateDatasetDisplay() {
 
 
   eventsPanelTitle.textContent =
-    analyticsState.syntheticOnly
-      ? `Generated Synthetic Data · ${label}`
-      : label;
+    displayLabel;
 
 
   eventsPanelDescription.textContent =
@@ -1244,7 +1280,6 @@ function updateDatasetDisplay() {
     );
 
 }
-
 
 /*
 ========================================================
@@ -1260,10 +1295,30 @@ function buildDatasetDescription(
     getFilters();
 
 
-  const sourceText =
-    analyticsState.syntheticOnly
-      ? "Generated synthetic analytics data"
-      : "Analytics data";
+  let sourceText =
+    "All analytics data";
+
+
+  if (
+    analyticsState.datasetMode ===
+    "real"
+  ) {
+
+    sourceText =
+      "Real Academy analytics data";
+
+  }
+
+
+  if (
+    analyticsState.datasetMode ===
+    "synthetic"
+  ) {
+
+    sourceText =
+      "Generated synthetic analytics data";
+
+  }
 
 
   const activeFilters =
@@ -1291,7 +1346,8 @@ function buildDatasetDescription(
 
 
   if (
-    analyticsState.syntheticOnly
+    analyticsState.datasetMode ===
+    "synthetic"
   ) {
 
     return (
@@ -1302,9 +1358,22 @@ function buildDatasetDescription(
   }
 
 
+  if (
+    analyticsState.datasetMode ===
+    "real"
+  ) {
+
+    return (
+      `Real ${label.toLowerCase()} ` +
+      `received from BeyondZ Academy.`
+    );
+
+  }
+
+
   return (
-    `Latest ${label.toLowerCase()} ` +
-    `received from BeyondZ Academy.`
+    `Combined real and synthetic ${label.toLowerCase()} ` +
+    `available in the analytics warehouse.`
   );
 
 }
@@ -1567,24 +1636,10 @@ function exportSelectedCategory() {
    * -------------------------------------------------------
    */
 
-  params.set(
-    "dataset",
-    analyticsState.syntheticOnly
-      ? "synthetic"
-      : "real"
-  );
-
-
-  if (
-    analyticsState.syntheticOnly
-  ) {
-
-    params.set(
-      "synthetic",
-      "true"
-    );
-
-  }
+ params.set(
+  "dataset",
+  analyticsState.datasetMode
+);
 
 
   /*
@@ -1966,6 +2021,7 @@ eventsBody.addEventListener(
 DATASET SELECTION
 ========================================================
 */
+
 viewSelectedBtn.addEventListener(
   "click",
   async () => {
@@ -1974,29 +2030,8 @@ viewSelectedBtn.addEventListener(
       exportType.value;
 
 
-    analyticsState.syntheticOnly =
-      false;
-
-
-    analyticsState.offset =
-      0;
-
-
-    await loadEvents();
-
-  }
-);
-
-viewSyntheticBtn.addEventListener(
-  "click",
-  async () => {
-
-    analyticsState.category =
-      exportType.value;
-
-
-    analyticsState.syntheticOnly =
-      true;
+    analyticsState.datasetMode =
+      datasetMode.value;
 
 
     analyticsState.offset =
@@ -2029,11 +2064,15 @@ applyFiltersBtn.addEventListener(
 
 
     analyticsState.category =
-      exportType.value;
+  exportType.value;
 
 
-    analyticsState.offset =
-      0;
+analyticsState.datasetMode =
+  datasetMode.value;
+
+
+analyticsState.offset =
+  0;
 
 
     await loadEvents();
